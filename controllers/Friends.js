@@ -180,9 +180,8 @@ friendsController.listFriends = async (req, res, next) => {
             res.status(200).json({
                 code: 200,
                 message: "Danh sách bạn bè",
-                data: {
-                    friends: users,
-                }
+                data: users
+                
             });
         }
 

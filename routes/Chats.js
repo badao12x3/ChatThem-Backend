@@ -27,4 +27,10 @@ chatsRoutes.get(
     auth,
     asyncWrapper(chatController.getMessaged),
 );
+
+chatsRoutes.get(
+    "/findChat",
+    auth,
+    asyncWrapper(chatController.findChat),
+);
 module.exports = chatsRoutes;

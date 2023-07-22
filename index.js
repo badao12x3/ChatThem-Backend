@@ -6,6 +6,7 @@ const mainRouter = require("./routes/index");
 const {PORT} = require("./constants/constants");
 const {MONGO_URI} = require("./constants/constants");
 const bodyParser = require('body-parser');
+const multer = require('multer');
 const io = require('socket.io')(3000)
 // const MessageModel = require("../models/Messages");
 

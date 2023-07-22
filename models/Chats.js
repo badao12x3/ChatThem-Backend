@@ -15,7 +15,7 @@ const mongoose = require("mongoose");
 const chatsSchema = new mongoose.Schema({
     name: {
         type: String,
-        required: true
+        required: false
     },
     member: [
         {
@@ -48,7 +48,11 @@ const chatsSchema = new mongoose.Schema({
                 default: "0"
             }
         }
-    ]
+    ],
+    avatar: {
+        type: String,
+        required: false
+    }
 });
 chatsSchema.set('timestamps', true);
 module.exports = mongoose.model('Chats', chatsSchema);

@@ -36,7 +36,11 @@ const usersSchema = new mongoose.Schema({
         default: GENDER_SECRET,
     },
     birthday: {
-        type: Date,
+        type: String,
+        required: false
+    },
+    email: {
+        type: String,
         required: false
     },
     description: {
@@ -78,6 +82,11 @@ const usersSchema = new mongoose.Schema({
     public_key: {
         type: String,
         require: true
+    },
+    online:{
+        type: String,
+        require: false,
+        default: "0"
     }
 });
 
