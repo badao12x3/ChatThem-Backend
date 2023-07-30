@@ -14,6 +14,7 @@ app.use(cors);
 
 // format message
 const moment = require('moment');
+// require('moment-timezone');
 const botName = 'Nhom4';
 
 function formatMessage(userId, username, avatar, room, typeRoom, publicKey, text, typeMess) {
@@ -26,7 +27,7 @@ function formatMessage(userId, username, avatar, room, typeRoom, publicKey, text
     typeMess: typeMess,
     typeRoom: typeRoom,
     publicKey: publicKey,
-    time: moment().format('YYYY-MM-DDTHH:mm:ss.SSSZ')
+    time: moment().utc().format('YYYY-MM-DDTHH:mm:ss.SSSZ')
   };
 }
 
@@ -35,10 +36,12 @@ io.on('connection', function(socket){
     console.log("one user connection")
     socket.on("joinRoom", ({userId, username, avatar, room, typeRoom, publicKey}) => {
         const user = userJoin(socket.id, userId, username, avatar, room, typeRoom, publicKey);
-        socket.join(user.room);
 
-        console.log("user:",user.username ,"join room:", user.room);
-
+        if (user) {
+            socket.join(user.room);
+            console.log("user:",user.username ,"join room:", user.room);
+        }
+        
         // socket.emit('message', formatMessage(botName, 'Welcome to ChatCord!'));
         // socket.broadcast
         // .to(user.room)
@@ -47,11 +50,11 @@ io.on('connection', function(socket){
         //     formatMessage(botName, `${user.username} has joined the chat`)
         // )
 
-        // Send users and room info
-        io.to(user.room).emit('roomUsers', {
-            room: user.room,
-            users: getRoomUsers(user.room)
-        });
+        // // Send users and room info
+        // io.to(user.room).emit('roomUsers', {
+        //     room: user.room,
+        //     users: getRoomUsers(user.room)
+        // });
     })
     socket.on('leaveRoom', ({username, room}) => {
         const user = userLeave(socket.id, username, room);

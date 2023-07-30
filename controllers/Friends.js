@@ -63,6 +63,52 @@ friendsController.setRequest = async (req, res, next) => {
         });
     }
 }
+friendsController.deleteRequest  = async (req, res, next) => {
+    try {
+        
+        let sender = req.userId;
+        let receiver = req.body.receiver;
+        let filter = { sender: sender, receiver: receiver , status: "0"};
+        // console.log("filter: " + filter.receiver);
+        const result = await FriendModel.deleteMany(filter);
+        // console.log("result: "+result);
+        // console.log("deletedCount: "+result.deletedCount);
+        if(result.acknowledged && result.deletedCount > 0 ){
+            res.status(200).json({
+                code: 200,
+                message: "Xóa thành công"
+            });
+        }else{
+            res.status(404).json({
+                code: 404,
+                message: "Không tìm thấy"
+            });
+        }
+    } catch (e) {
+        return res.status(httpStatus.INTERNAL_SERVER_ERROR).json({
+            message: e.message
+        });
+    }
+
+}
+friendsController.getSendRequest  = async (req, res, next) => {
+    try {
+        let sender = req.userId;
+        let requested = await FriendModel.find({sender: sender, status: "0" }).distinct('receiver')
+        let users = await UserModel.find().where('_id').in(requested).exec()
+   
+        res.status(200).json({
+            code: 200,
+            message: "Danh sách lời mời đã gửi",
+            data: users
+        });
+    } catch (e) {
+        return res.status(httpStatus.INTERNAL_SERVER_ERROR).json({
+            message: e.message
+        });
+    }
+
+}
 
 friendsController.getRequest = async (req, res, next) => {
     try {
@@ -73,9 +119,7 @@ friendsController.getRequest = async (req, res, next) => {
         res.status(200).json({
             code: 200,
             message: "Danh sách lời mời kết bạn",
-            data: {
-                friends: users,
-            }
+            data: users
         });
     } catch (e) {
         return res.status(httpStatus.INTERNAL_SERVER_ERROR).json({
@@ -192,5 +236,63 @@ friendsController.listFriends = async (req, res, next) => {
     }
 }
 
-
+friendsController.getStatusFriend = async (req, res, next) => {
+    try {
+        
+        let m = req.userId;
+        console.log("userId: " + m);
+        let y = req.body.receiver;
+        let filter1 = { sender: m, receiver: y};
+        let filter2 = { sender: y, receiver: m };
+        // console.log("filter: " + filter.receiver);
+        let result = await FriendModel.findOne(filter1).populate("sender", "_id username avatar").populate("receiver", "_id username avatar");
+        if(result == null){
+            result = await FriendModel.findOne(filter2).populate("sender", "_id username avatar").populate("receiver", "_id username avatar");
+        }
+        
+        // console.log("result: "+result);
+        // console.log("deletedCount: "+result.deletedCount);
+        if(result != null){
+            
+            res.status(200).json({
+                code: 200,
+                message: "Trạng thái bạn bè",
+                status: result.status,
+                me : result.sender._id == m ? result.sender : result.receiver,
+                you : result.sender._id == y ? result.sender : result.receiver
+            });
+            
+        }else{
+            let me = await UserModel.findById(m);
+            // Lọc bớt một số thuộc tính
+            const filteredMe = {
+                _id: me._id,
+                username: me.username,
+                avatar: me.avatar
+                // Thêm các thuộc tính khác bạn muốn giữ lại ở đây
+            };
+            
+            // console.log(filteredMe);
+            let you = await UserModel.findById(y);
+            // Lọc bớt một số thuộc tính
+            const filteredYou = {
+                _id: you._id,
+                username: you.username,
+                avatar: you.avatar
+                // Thêm các thuộc tính khác bạn muốn giữ lại ở đây
+            };
+            res.status(200).json({
+                code: 200,
+                message: "Trạng thái bạn bè",
+                status: "0",
+                me: filteredMe,
+                you : filteredYou
+            });
+        }
+    } catch (e) {
+        return res.status(httpStatus.INTERNAL_SERVER_ERROR).json({
+            message: e.message
+        });
+    }
+}
 module.exports = friendsController;

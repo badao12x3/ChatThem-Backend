@@ -4,9 +4,16 @@ const users = [];
 function userJoin(id, userId, username, avatar, room,typeRoom, publicKey) {
   const user = { id, userId, username, avatar, room, typeRoom, publicKey};
 
-  users.push(user);
-
-  return user;
+  // Sử dụng find()
+  const foundUser = users.find(u => u.userId === user.userId && u.room === user.room);
+  if (foundUser) {
+    console.log("numOfUser:",users.length);
+    return null;
+  } else {
+    users.push(user);
+    console.log("numOfUser:",users.length);
+    return user;
+  }
 }
 function userLeave(id, username, room){
   const index = users.findIndex(user => user.id === id && user.room == room);

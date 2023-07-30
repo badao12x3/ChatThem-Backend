@@ -200,8 +200,21 @@ chatController.send = async (req, res, next) => {
         await ChatModel.findByIdAndUpdate(chatIdSend, {
             lastMessage: message._id
         });
-        let messageNew = await MessagesModel.findById(message._id).populate('chat',"_id type").populate('user',"_id avatar username public_key online");
+        let messageNew;
+        if (!chatId){
+            messageNew = await MessagesModel.findById(message._id).populate('chat',"_id type name avatar member").populate('user',"_id avatar username public_key online").lean();
+            if (typeChat === PRIVATE_CHAT) {
+                let receiver = await UsersModel.findById(receivedId);
+                // console.log(receiver)
+                messageNew.chat.name = receiver.username;
+                messageNew.chat.avatar = receiver.avatar; 
+            }
+        }else{
+            messageNew = await MessagesModel.findById(message._id).populate('chat',"_id type ").populate('user',"_id avatar username public_key online");
+        }
+        
         return callRes(res, responseError.OK, messageNew);
+
 
     } catch (e) {
         return res.status(httpStatus.INTERNAL_SERVER_ERROR).json({
@@ -247,14 +260,37 @@ chatController.findChat = async (req, res, next) => {
         });
     }
 }
+chatController.getMember = async (req, res, next) => {
 
+    let chatId = req.query.chatId;
+
+    if(!chatId){
+        callRes(res,responseError.PARAMETER_IS_NOT_ENOUGH);
+    }
+    
+    try {
+        let chat = await ChatModel.findById(chatId).populate("member", "_id username avatar" );
+        if(chat){
+            callRes(res, responseError.OK, chat.member);
+        }else{
+            callRes(res, responseError.CHAT_IS_NOT_EXISTED);
+        }
+        
+    } catch (e) {
+        return res.status(httpStatus.INTERNAL_SERVER_ERROR).json({
+            message: e.message
+        });
+    }
+}
 chatController.getMessaged = async(req, res, next) => {
     let userId = req.userId;
     // console.log("req: ",req);
     let listChats = await ChatModel.find({"member": {$all: [userId]}}).populate({
         path: 'lastMessage',
         populate: { path: 'user' }
-    }).lean();
+    })
+    .sort({ 'lastMessage.updatedAt': 1 }) // Sắp xếp theo trường "updatedAt" trong "lastMessage" giảm dần
+    .lean();
 
 
     let result = [];
