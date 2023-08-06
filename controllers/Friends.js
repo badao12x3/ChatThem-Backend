@@ -245,9 +245,13 @@ friendsController.getStatusFriend = async (req, res, next) => {
         let filter1 = { sender: m, receiver: y};
         let filter2 = { sender: y, receiver: m };
         // console.log("filter: " + filter.receiver);
-        let result = await FriendModel.findOne(filter1).populate("sender", "_id username avatar").populate("receiver", "_id username avatar");
+        let result = await FriendModel.findOne(filter1).populate("sender", "_id username avatar cover_image").populate("receiver", "_id username avatar cover_image");
+        let isSend 
         if(result == null){
-            result = await FriendModel.findOne(filter2).populate("sender", "_id username avatar").populate("receiver", "_id username avatar");
+            result = await FriendModel.findOne(filter2).populate("sender", "_id username avatar cover_image").populate("receiver", "_id username avatar cover_image");
+            isSend = false;
+        }else {
+            isSend = true;
         }
         
         // console.log("result: "+result);
@@ -259,7 +263,8 @@ friendsController.getStatusFriend = async (req, res, next) => {
                 message: "Trạng thái bạn bè",
                 status: result.status,
                 me : result.sender._id == m ? result.sender : result.receiver,
-                you : result.sender._id == y ? result.sender : result.receiver
+                you : result.sender._id == y ? result.sender : result.receiver,
+                isSend: isSend
             });
             
         }else{
@@ -284,9 +289,10 @@ friendsController.getStatusFriend = async (req, res, next) => {
             res.status(200).json({
                 code: 200,
                 message: "Trạng thái bạn bè",
-                status: "0",
+                status: "-1",
                 me: filteredMe,
-                you : filteredYou
+                you : filteredYou,
+                isSend: false
             });
         }
     } catch (e) {

@@ -135,51 +135,14 @@ usersController.edit = async (req, res, next) => {
             "country",
             "avatar",
             "cover_image",
-            "email"
+            "email",
+            "fcm",
+            "online"
         ];
         for (let i = 0; i < listPros.length; i++) {
             let pro = listPros[i];
             if (req.body.hasOwnProperty(pro)) {
                 dataUserUpdate[pro] = req.body[pro];
-                // switch (pro) {
-                //     case "avatar":
-                //         let savedAvatarDocument = null;
-                //         if (uploadFile.matchesFileBase64(avatar) !== false) {
-                //             const avatarResult = uploadFile.uploadFile(avatar);
-                //             if (avatarResult !== false) {
-                //                 let avatarDocument = new DocumentModel({
-                //                     fileName: avatarResult.fileName,
-                //                     fileSize: avatarResult.fileSize,
-                //                     type: avatarResult.type
-                //                 });
-                //                 savedAvatarDocument = await avatarDocument.save();
-                //             }
-                //         } else {
-                //             savedAvatarDocument = await DocumentModel.findById(avatar);
-                //         }
-                //         dataUserUpdate[pro] = savedAvatarDocument !== null ? savedAvatarDocument._id : null;
-                //         break;
-                //     case "cover_image":
-                //         let savedCoverImageDocument = null;
-                //         if (uploadFile.matchesFileBase64(cover_image) !== false) {
-                //             const coverImageResult = uploadFile.uploadFile(cover_image);
-                //             if (coverImageResult !== false) {
-                //                 let coverImageDocument = new DocumentModel({
-                //                     fileName: coverImageResult.fileName,
-                //                     fileSize: coverImageResult.fileSize,
-                //                     type: coverImageResult.type
-                //                 });
-                //                 savedCoverImageDocument = await coverImageDocument.save();
-                //             }
-                //         } else {
-                //             savedCoverImageDocument = await DocumentModel.findById(cover_image);
-                //         }
-                //         dataUserUpdate[pro] = savedCoverImageDocument !== null ? savedCoverImageDocument._id : null;
-                //         break;
-                //     default:
-                //         dataUserUpdate[pro] = req.body[pro];
-                //         break;
-                // }
             }
         }
 
@@ -352,19 +315,30 @@ usersController.setBlockDiary = async (req, res, next) => {
 }
 usersController.searchUser = async (req, res, next) => {
     try {
-        let userId = req.userId
+        let userId = req.userId;
+        // console.log(userId)
         let searchKey = new RegExp(req.body.keyword, 'i');
+        // console.log(searchKey)
         let result = await UserModel.find({
             phonenumber: searchKey,
             _id: { $ne: userId }
           }).limit(10).exec();
         // let result = await UserModel.find({phonenumber: searchKey}).limit(10).exec();
 
-        res.status(200).json({
-            code: 200,
-            message: "Tìm kiếm thành công",
-            data: result
-        });
+
+        if(result.length > 0){
+            res.status(200).json({
+                code: 200,
+                message: "Tìm kiếm thành công",
+                data: result
+            });
+        }else{
+            res.status(httpStatus.NOT_FOUND).json({
+                code: 404,
+                message: "Không tồn tại"
+            });
+        }
+        
 
     } catch (e) {
         return res.status(httpStatus.INTERNAL_SERVER_ERROR).json({

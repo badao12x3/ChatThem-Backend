@@ -200,18 +200,30 @@ chatController.send = async (req, res, next) => {
         await ChatModel.findByIdAndUpdate(chatIdSend, {
             lastMessage: message._id
         });
-        let messageNew;
-        if (!chatId){
-            messageNew = await MessagesModel.findById(message._id).populate('chat',"_id type name avatar member").populate('user',"_id avatar username public_key online").lean();
-            if (typeChat === PRIVATE_CHAT) {
-                let receiver = await UsersModel.findById(receivedId);
-                // console.log(receiver)
-                messageNew.chat.name = receiver.username;
-                messageNew.chat.avatar = receiver.avatar; 
+        let messageNew = await MessagesModel.findById(message._id).populate('chat',"_id type name avatar member").populate('user',"_id avatar username public_key online").lean();
+        const fcm = [];
+        if (typeChat === PRIVATE_CHAT) {
+            let receiver = await UsersModel.findById(receivedId);
+            // console.log(receiver)
+            messageNew.chat.name = receiver.username;
+            messageNew.chat.avatar = receiver.avatar; 
+            if (receiver.fcm) {
+                fcm.push(receiver.fcm);
             }
-        }else{
-            messageNew = await MessagesModel.findById(message._id).populate('chat',"_id type ").populate('user',"_id avatar username public_key online");
+            messageNew.chat.fcm = fcm;
         }
+        if (typeChat === GROUP_CHAT) {
+            messageNew.chat.member.forEach(async (id) => {
+                if(id != userId) {
+                    let user = await UsersModel.findById(receivedId);
+                    if (user && user.fcm) {
+                        fcm.push(user.fcm);
+                    }
+                }
+            });
+            messageNew.chat.fcm = fcm;
+        }
+        
         
         return callRes(res, responseError.OK, messageNew);
 
@@ -289,7 +301,7 @@ chatController.getMessaged = async(req, res, next) => {
         path: 'lastMessage',
         populate: { path: 'user' }
     })
-    .sort({ 'lastMessage.updatedAt': 1 }) // Sắp xếp theo trường "updatedAt" trong "lastMessage" giảm dần
+    .sort({ 'updatedAt': -1 }) // Sắp xếp theo trường "updatedAt" trong "lastMessage" giảm dần
     .lean();
 
 
@@ -306,6 +318,7 @@ chatController.getMessaged = async(req, res, next) => {
             chat.name = receiver.username;
             chat.avatar = receiver.avatar;
             chat.online = receiver.online ? receiver.online : "0";
+            chat.publicKey = receiver.public_key;
         }else{
             let member = chat.member;
             let is_online = false;

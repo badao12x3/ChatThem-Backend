@@ -1,4 +1,5 @@
 const users = [];
+const userOnline = [];
 
 // Join user to chat
 function userJoin(id, userId, username, avatar, room,typeRoom, publicKey) {
@@ -15,6 +16,20 @@ function userJoin(id, userId, username, avatar, room,typeRoom, publicKey) {
     return user;
   }
 }
+function userOn(id, userId){
+  const user = { id, userId};
+
+  // Sử dụng find()
+  const foundUser = userOnline.find(u => u.userId === user.userId);
+  if (foundUser) {
+    console.log("numOfUserOnline:",userOnline.length);
+    return null;
+  } else {
+    userOnline.push(user);
+    console.log("numOfUserOnline:",userOnline.length);
+    return user;
+  }
+}
 function userLeave(id, username, room){
   const index = users.findIndex(user => user.id === id && user.room == room);
   if (index !== -1) {
@@ -25,6 +40,14 @@ function userLeave(id, username, room){
 // Get current user
 function getCurrentUser(id, room) {
   return users.find(user => user.id === id && user.room == room);
+}
+
+// Get socketId user
+function getSocketUser(userId) {
+  const user =  userOnline.find(user => user.userId === userId);
+  if (user ) {
+    return user.id;
+  }else return null;  
 }
 
 // User leaves chat
@@ -42,8 +65,10 @@ function getRoomUsers(room) {
 }
 
 module.exports = {
+  userOn,
   userJoin,
   getCurrentUser,
   userLeave,
-  getRoomUsers
+  getRoomUsers,
+  getSocketUser
 };

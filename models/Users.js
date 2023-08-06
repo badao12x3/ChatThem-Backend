@@ -87,6 +87,10 @@ const usersSchema = new mongoose.Schema({
         type: String,
         require: false,
         default: "0"
+    },
+    fcm:{
+        type: String,
+        require: false
     }
 });
 
